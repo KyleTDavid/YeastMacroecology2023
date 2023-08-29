@@ -8,7 +8,7 @@ library(caper)
 #read in ecoregion data ### FIGSHARE ###
 df <- read.delim('eco_data.txt')
 
-#run regressions and generate summary statistics for every variable (Table S2)
+#run regressions and generate summary statistics for every variable (Table S1)
 sumstat <- data.frame(var=character(), p=double(), m=double(), r2=double())
 null_model <- glm.nb(df$richness ~ 1)
 for (i in 3:98) {
@@ -66,7 +66,7 @@ df_pca <- cbind(pca_out %>% dplyr::select(-index), eco_pca)
 df_pca <- df_pca %>% mutate_at(.vars = c("wet.pca", "clay.pca", "sand.pca", "h2o15k.pca", "productivity.pca", "humid.pca", "wetMin.pca", "soilRichness.pca", "temp.pca", "biomass.pca"), function(x) {return(-x)})
 df_pca$richness <- df_sig$richness
 
-#run regressions and generate summary statistics for significant variables and principal components (Table S1)
+#run regressions and generate summary statistics for significant variables and principal components (Table S2)
 sumstat_pca <- data.frame(var=character(), p=double(), coef=double(), pseudo_r2=double())
 
 null_model <- lm(df_pca$richness ~ 1)
@@ -113,7 +113,7 @@ for (var in L) {
 #generalist specialist classifications from https://doi.org/10.1101/2023.06.19.545611
 breadth <- read.delim('Generalist_Specialist_Table_names_10_22.txt')
 
-#TABLE SSOMETHING
+#Table S9
 #range size, absolute latitude, and overlapping species richness for each species
 occupancy <- read.delim('species_lat_rich.txt')
 
@@ -139,7 +139,6 @@ breadth$Carb_Class <- ifelse(breadth$Carb_Class=='Specialist', 'Specialist', 'Ot
 df <- merge(breadth, occupancy)
 
 #phylogenetic ANOVA for specialist class and range size
-
 anova.df <- df %>% dplyr::select(c(species, Carb_Class, occupancy)) %>% na.omit()
 dat <- anova.df[3]
 rownames(dat) <- unlist(anova.df$species)
