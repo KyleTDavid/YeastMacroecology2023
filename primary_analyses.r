@@ -5,19 +5,18 @@ library(readxl)
 library(geiger)
 library(caper)
 
-#read in ecoregion data ### FIGSHARE ###
+#read in ecoregion data (Dataset S6)
 df <- read.delim('eco_data.txt')
 
-#run regressions and generate summary statistics for every variable (Table S1)
-sumstat <- data.frame(var=character(), p=double(), m=double(), r2=double())
-null_model <- glm.nb(df$richness ~ 1)
+#run regressions and generate summary statistics for every variable (Dataset S1)
+sumstat <- data.frame(var=character(), p=double(), m=double())
 for (i in 3:98) {
 model <- glm.nb(df$richness ~ df[,i])
 scaled_model <- lm(df$richness ~ scale(df[,i]))
 p <- summary(model)$coefficients[2,4]
 m <- summary(scaled_model)$coefficients[2,1]
 r2 <- summary(scaled_model)$adj.r.squared
-sumstat <- rbind(sumstat, data.frame(var=names(df)[i], p=p, m=m, r2=r2))
+sumstat <- rbind(sumstat, data.frame(var=names(df)[i], p=p, m=m))
     }
 sumstat$fdr <- p.adjust(sumstat$p, method = "fdr")
 
@@ -66,10 +65,8 @@ df_pca <- cbind(pca_out %>% dplyr::select(-index), eco_pca)
 df_pca <- df_pca %>% mutate_at(.vars = c("wet.pca", "clay.pca", "sand.pca", "h2o15k.pca", "productivity.pca", "humid.pca", "wetMin.pca", "soilRichness.pca", "temp.pca", "biomass.pca"), function(x) {return(-x)})
 df_pca$richness <- df_sig$richness
 
-#run regressions and generate summary statistics for significant variables and principal components (Table S2)
-sumstat_pca <- data.frame(var=character(), p=double(), coef=double(), pseudo_r2=double())
-
-null_model <- lm(df_pca$richness ~ 1)
+#run regressions and generate summary statistics for significant variables and principal components (Dataset S2)
+sumstat_pca <- data.frame(var=character(), p=double(), coef=double())
 
 for (i in 2:40) {
     model <- glm.nb(df_pca$richness ~ df_pca[,i])
@@ -77,14 +74,9 @@ for (i in 2:40) {
 
     p <- summary(model)$coefficients[2,4]
     coef <- summary(scaled_model)$coefficients[2,1]
-    r2 <- summary(scaled_model)$adj.r.squared
-    pseudo_r2 <- 1 - (logLik(model)/logLik(null_model))
-
-    sumstat_pca <- rbind(sumstat_pca, data.frame(var=names(df_pca)[i], p=p, coef=coef, pseudo_r2=pseudo_r2, r2=r2))
+    sumstat_pca <- rbind(sumstat_pca, data.frame(var=names(df_pca)[i], p=p, coef=coef))
     }
 sumstat_pca$fdr <- p.adjust(sumstat_pca$p, method = "fdr")
-sumstat_pca <- sumstat_pca %>% dplyr::select(-pseudo_r2)
-write.table(sumstat_pca, 'eco_sumstat_pca.txt', row.names=FALSE, quote=FALSE, sep='\t')
 
 #relative importance analysis for highest performing variables
 L <- c('forest', 'productivity.pca', 'h2o15k.pca', 'dry', 'ph.pca', 'wet.pca', 'geoClassDiv', 'biomass.pca', 'plantRich', 'EVIdiv', 'wetMin.pca', 'temperate', 'topo.pca', 'forestIntegrity', 'sunMax', 'humid.pca')
@@ -96,7 +88,6 @@ aic <- AIC(glm.nb(`df_pca$richness` ~ ., data=cbind(df_pca$richness, data.frame(
 write(paste(c(paste(unlist(R), collapse='+')), aic, sep='\t'), "tmpaic.txt", append=TRUE)
 }
 
-##FIGSHARE##
 aic <- read.delim('aic.txt', header=FALSE, col.names = c('var', 'AIC'))
 
 aic$delta_AIC <- aic$AIC - min(aic$AIC)
@@ -113,14 +104,13 @@ for (var in L) {
 #generalist specialist classifications from https://doi.org/10.1101/2023.06.19.545611
 breadth <- read.delim('Generalist_Specialist_Table_names_10_22.txt')
 
-#Table S9
-#range size, absolute latitude, and overlapping species richness for each species
+#range size, absolute latitude, and overlapping species richness for each species (Dataset S9)
 occupancy <- read.delim('species_lat_rich.txt')
 
 #load tree from https://doi.org/10.1101/2023.06.19.545611 and reconcile taxonomies 
 tree <- read.tree('1154yeasts_1403OGs_ml_timetree_newnames.tree')
-
 taxonomy <- read_excel('Draft_TableS1_20230201.xlsx')
+
 breadth$species <- taxonomy$NEW_Tip_ID[match(unlist(breadth$assembly_fullID_updated), taxonomy$assembly_fullID_updated)]
 occupancy$species <- taxonomy$NEW_Tip_ID[match(unlist(occupancy$species), taxonomy$Species)]
 occupancy <- na.omit(occupancy)
@@ -128,11 +118,11 @@ occupancy <- na.omit(occupancy)
 yeast_compare <- comparative.data(phy = tree, data = occupancy, names.col = species, vcv = TRUE, na.omit = FALSE, warn.dropped = TRUE)
 
 #PGLS for latitude and range size
-latitude.pgls<-pgls(occupancy ~ abs.y., data = yeast_compare, lambda='ML')
+latitude.pgls<-pgls(range_size ~ absolute_latitude, data = yeast_compare, lambda='ML')
 summary(latitude.pgls)
 
 #PGLS for co-occurring diversity and range size
-diversity.pgls<-pgls(occupancy ~ richness, data = yeast_compare, lambda='ML')
+diversity.pgls<-pgls(range_size ~ richness, data = yeast_compare, lambda='ML')
 summary(diversity.pgls)
 
 breadth$Carb_Class <- ifelse(breadth$Carb_Class=='Specialist', 'Specialist', 'Other')
