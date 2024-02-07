@@ -54,7 +54,7 @@ spurley <- spurley %>% select(OTU, Lattitude, Longitude) %>% rename(species=OTU,
 spurley = na.omit(spurley)
 spurley$source <- "Spurley, William J., et al. \"Substrate, temperature, and geographical patterns among nearly 2000 natural yeast isolates.\" Yeast 39.1-2 (2022): 55-68. APA"
                       
-#combine and fix synonyms (Dataset S4)
+#combine and fix synonyms (Dataset S5)
 speciesCoord <- rbind(gf,gbif,peris,spurley)
 synonyms <- read.delim("synonyms.txt", na.strings = "")
 synonyms <- synonyms[!is.na(synonyms$Species),]
@@ -83,5 +83,5 @@ flags <- clean_coordinates(x = speciesCoord,
                       
 speciesCoord <- speciesCoord[flags$.summary,]
                       
-#write to file ### LINK TO FIGSHARE ###
+#write to file (also found at doi.org/10.6084/m9.figshare.25145819)
 write.table(speciesCoord, 'species_coordinates.txt', quote=FALSE, row.names = FALSE, sep='\t')
