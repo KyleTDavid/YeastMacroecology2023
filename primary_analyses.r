@@ -5,10 +5,10 @@ library(readxl)
 library(geiger)
 library(caper)
 
-#read in ecoregion data (Dataset S6)
+#read in ecoregion data (Dataset S7)
 df <- read.delim('eco_data.txt')
 
-#run regressions and generate summary statistics for every variable (Dataset S1)
+#run regressions and generate summary statistics for every variable (Dataset S2)
 sumstat <- data.frame(var=character(), p=double(), m=double())
 for (i in 3:98) {
 model <- glm.nb(df$richness ~ df[,i])
@@ -65,7 +65,7 @@ df_pca <- cbind(pca_out %>% dplyr::select(-index), eco_pca)
 df_pca <- df_pca %>% mutate_at(.vars = c("wet.pca", "clay.pca", "sand.pca", "h2o15k.pca", "productivity.pca", "humid.pca", "wetMin.pca", "soilRichness.pca", "temp.pca", "biomass.pca"), function(x) {return(-x)})
 df_pca$richness <- df_sig$richness
 
-#run regressions and generate summary statistics for significant variables and principal components (Dataset S2)
+#run regressions and generate summary statistics for significant variables and principal components (Dataset S3)
 sumstat_pca <- data.frame(var=character(), p=double(), coef=double())
 
 for (i in 2:40) {
@@ -104,7 +104,7 @@ for (var in L) {
 #generalist specialist classifications from https://doi.org/10.1101/2023.06.19.545611
 breadth <- read.delim('Generalist_Specialist_Table_names_10_22.txt')
 
-#range size, absolute latitude, and overlapping species richness for each species (Dataset S9)
+#range size, absolute latitude, and overlapping species richness for each species (Dataset S10)
 occupancy <- read.delim('species_lat_rich.txt')
 
 #load tree from https://doi.org/10.1101/2023.06.19.545611 and reconcile taxonomies 
