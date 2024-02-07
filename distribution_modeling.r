@@ -3,7 +3,7 @@ library(randomForest)
 library(terra)
 library(pROC)
 
-#load training data ###LINK TO FIGSHARE###
+#load training data https://figshare.com/articles/dataset/Yeast_Macroecology_2023/25145819
 trainingData <- read.delim('training_data.txt')
 presenceData <- trainingData[trainingData$occurrence=='present',]
 backgroundData <- trainingData[trainingData$occurrence=='absent',]
